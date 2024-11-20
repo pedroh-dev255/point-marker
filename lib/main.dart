@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:intl/intl.dart';
+import 'tela_inicial.dart'; // Importando a TelaInicial
+import 'tela_manual.dart'; // Importando a TelaManual
 
 void main() async {
   await Hive.initFlutter();
@@ -15,53 +16,62 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Controle de Ponto',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: TelaInicial(),
+      home: TelaPrincipal(), // Alterando para a TelaPrincipal com PageView
     );
   }
 }
 
-class TelaInicial extends StatelessWidget {
-  final TextEditingController _horarioController = TextEditingController();
+class TelaPrincipal extends StatefulWidget {
+  @override
+  _TelaPrincipalState createState() => _TelaPrincipalState();
+}
 
-  TelaInicial() {
-    // Preenche o horário com o horário atual
-    _horarioController.text = DateFormat('HH:mm').format(DateTime.now());
-  }
+class _TelaPrincipalState extends State<TelaPrincipal> {
+  int _currentIndex = 0; // Para controlar o índice da tela
+  final PageController _pageController = PageController(); // Controlador para o PageView
 
-  void _registrarHorario() {
-    // Lógica para salvar o horário no banco de dados
-    print("Horário registrado: ${_horarioController.text}");
+  // Função para navegar pelas telas usando o índice
+  void _onItemTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+    _pageController.jumpToPage(index); // Navega para a página selecionada
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Registrar Ponto')),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 150, // Define a largura do input
-              child: TextField(
-                controller: _horarioController,
-                keyboardType: TextInputType.datetime, // Abre o teclado numérico
-                decoration: InputDecoration(
-                  labelText: 'Horário',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _registrarHorario,
-              child: Text('Registrar Ponto', style: TextStyle(fontSize: 18)),
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-              ),
-            ),
-          ],
-        ),
+      appBar: AppBar(title: Text('Controle de Ponto')),
+      body: PageView(
+        controller: _pageController, // Controlador para navegação por deslize
+        onPageChanged: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        children: [
+          TelaInicial(), // Tela inicial
+          TelaManual(), // Tela manual
+          Container(color: Colors.grey), // Placeholder para outras telas
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex, // Índice da página atual
+        onTap: _onItemTapped, // Método que é chamado quando o ícone da barra é pressionado
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Inicial',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.edit),
+            label: 'Manual',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.table_chart),
+            label: 'Tabela',
+          ),
+        ],
       ),
     );
   }
